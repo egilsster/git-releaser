@@ -18,7 +18,7 @@ Currently supports only versions from `package.json`.
 
 Example
 
-```sh
+```txt
 λ git-releaser minor
 [INFO] 📝 Current version is 0.8.1-0
 [INFO] 📎 Generating a changelog for v0.9.0
@@ -30,11 +30,11 @@ Example
 
 ## TODO
 
-- [ ] Make the CHANGELOG creation and addition better
-- [ ] Support Cargo.toml
-- [ ] Create a Github release with the new changelog
-- [ ] Signed commits
-- [ ] Improve error handling
-- [ ] Unit test all the things
-- [ ] Read PR information for the repo instead of just git commits
-- [ ] Prompt to stash local changes so the working dir is clean during the release process
+- Support Cargo.toml
+- Create a Github release with the new changelog
+- Signed commits
+- Improve error handling
+- Unit test all the things
+- Read PR information for the repo instead of just git commits
+- Prompt to stash local changes so the working dir is clean during the release process
+- Add confirmation on the release that will be created

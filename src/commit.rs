@@ -21,7 +21,6 @@ pub struct Commit {
 
 impl Commit {
     pub fn compact(&self) -> String {
-        // format!("{} [{}]", self.subject, self.author.name)
         self.subject.to_string()
     }
 }
@@ -32,7 +31,7 @@ impl<T: AsRef<str>> From<T> for Commit {
         match serde_json::from_str(input.as_ref()) {
             Ok(commit) => commit,
             Err(err) => {
-                warn!("{:?}", err.to_string());
+                warn!("{}", err.to_string());
                 Commit::default()
             }
         }
