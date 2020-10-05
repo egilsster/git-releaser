@@ -58,8 +58,8 @@ pub fn commits_in_log(args: &[String]) -> Result<Vec<Commit>> {
                 // - `docs: updating changelog`
 
                 let subj = commit.subject.to_string();
-                if subj.starts_with("chore: releasing v")
-                    || subj.starts_with("chore: beginning development on v")
+                if subj.starts_with("chore: releasing")
+                    || subj.starts_with("chore: beginning development on")
                     || subj.starts_with("docs: updating changelog")
                 {
                     return false;
@@ -75,7 +75,7 @@ fn last_tags(n: i32) -> Result<Vec<String>> {
     git(&[
         "for-each-ref",
         &format!("--count={}", n),
-        "--sort=-taggerdate",
+        "--sort=-committerdate",
         "--format=%(refname:short)",
         "refs/tags/*",
     ])
@@ -124,7 +124,10 @@ pub fn push_tag(tag_ver: &str) -> Result<Output> {
 /// Run a git command with arguments.
 fn git(args: &[&str]) -> Result<Output> {
     debug!("git {}", args.join(" "));
-    let output = Command::new("git").args(args).output().unwrap();
+    let output = Command::new("git")
+        .args(args)
+        .output()
+        .map_err(|e| eyre!(e.to_string()))?;
     if output.status.success() {
         Ok(output)
     } else {
