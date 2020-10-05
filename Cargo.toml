@@ -12,7 +12,7 @@ serde_json = { version = "1.0.56", features = ["preserve_order"] }
 semver = "0.10.0"
 structopt = { version = "0.3", default-features = false }
 chrono = "0.4.19"
-tokio = {"version"= "0.2.22", features=["rt-threaded", "macros"]}
+tokio = { version = "0.2.22", features = ["rt-threaded", "macros"] }
 eyre = "0.6.1"
 log = "0.4.11"
 env_logger = "0.7.1"

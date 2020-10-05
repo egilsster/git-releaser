@@ -1,8 +1,11 @@
 use crate::commit::Commit;
 use crate::git::{commits_in_log, first_commit, last_tag};
 use chrono::prelude::*;
-use eyre::Result;
+use eyre::{Result, WrapErr};
 use std::fs;
+
+static CHANGELOG_FILE_PATH: &str = "CHANGELOG.md";
+static CHANGELOG_HEADER: &str = "# CHANGELOG\n\n";
 
 pub struct ChangelogGenerator {}
 
@@ -37,8 +40,7 @@ impl ChangelogGenerator {
     }
 
     pub fn update_changelog(&self, commits: &[Commit], version: &str) -> Result<bool> {
-        let local: DateTime<Local> = Local::now();
-        let current_date = local.date().format("%Y-%m-%d").to_string(); // e.g. 2020-10-04
+        let current_date = Local::now().date().format("%Y-%m-%d").to_string(); // e.g. 2020-10-04
         let version_header = format!("## {} ({})", version, current_date);
 
         let change_list = if commits.is_empty() {
@@ -55,31 +57,54 @@ impl ChangelogGenerator {
         self.write_changelog(version, entry)
     }
 
-    // TODO(egilsster): When the header is not exactly what I expect, nothing gets
-    // added to the changelog, could probably just find a lvl1 header and replace it
-    // with what I want. This also applies if the file is empty
+    /// Inserts the new changelog entry below the main header to
+    /// maintain ascending order by date.
+    pub fn insert_entry(
+        &self,
+        contents: String,
+        version: &str,
+        new_entry: String,
+    ) -> Result<String> {
+        if contents.contains(&format!("## {}", version)) {
+            return Err(eyre!("Version entry already in CHANGELOG.md"));
+        }
+        if !contents.starts_with("# CHANGELOG") {
+            return Err(eyre!("CHANGELOG.md must start with '# CHANGELOG'"));
+        }
+        let entry_to_insert = format!("{}{}\n", CHANGELOG_HEADER, new_entry);
+        let new_contents = contents.replace(CHANGELOG_HEADER, &entry_to_insert);
+
+        Ok(new_contents)
+    }
+
+    pub fn read_changelog_contents(&self) -> Result<String> {
+        // File does probably not exist when it can not be read
+        // so create a file with the header
+        if fs::read_to_string(CHANGELOG_FILE_PATH).is_err() {
+            fs::write(CHANGELOG_FILE_PATH, CHANGELOG_HEADER)
+                .wrap_err("Could not write CHANGELOG.md")?;
+        }
+
+        let contents =
+            fs::read_to_string(CHANGELOG_FILE_PATH).wrap_err("Could not read CHANGELOG.md")?;
+
+        if contents.is_empty() {
+            fs::write(CHANGELOG_FILE_PATH, CHANGELOG_HEADER)
+                .wrap_err("Could not write CHANGELOG.md")?;
+        }
+
+        fs::read_to_string(CHANGELOG_FILE_PATH).wrap_err("Could not read CHANGELOG.md")
+    }
+
+    /// Ensures the changelog is valid and injects the new changelog entry
+    /// to the top of the file, below the header.
     pub fn write_changelog(&self, version: &str, new_entry: String) -> Result<bool> {
         debug!("Add {} to CHANGELOG.md", version);
 
-        let header = "# CHANGELOG\n\n";
-
-        let file_path = "CHANGELOG.md";
-        let changelog_file_contents = fs::read_to_string(file_path);
-
-        // File does probably not exist, create an empty file
-        if changelog_file_contents.is_err() {
-            fs::write(file_path, header).unwrap();
-        }
-
-        let changelog_file_contents = fs::read_to_string(file_path).unwrap();
-        if changelog_file_contents.contains(&format!("## {}", version)) {
-            return Err(eyre!("Version entry already in CHANGELOG.md"));
-        }
-
-        let entry_to_insert = format!("{}{}\n", header, new_entry);
-        let new_contents = changelog_file_contents.replace(header, &entry_to_insert);
-
-        let write_res = fs::write(file_path, new_contents).map_err(|e| eyre!(e.to_string()));
+        let changelog_file_contents = self.read_changelog_contents()?;
+        let updated_contents = self.insert_entry(changelog_file_contents, version, new_entry)?;
+        let write_res =
+            fs::write(CHANGELOG_FILE_PATH, updated_contents).map_err(|e| eyre!(e.to_string()));
 
         Ok(write_res.is_ok())
     }
@@ -95,5 +120,49 @@ impl ChangelogGenerator {
             .into_iter()
             .map(|commit| format!(" - {}\n", commit.compact()))
             .collect::<String>()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_insert_entry_empty() {
+        let change_gen = ChangelogGenerator {};
+
+        let log = "".to_owned();
+        let version = "v0.1.2";
+        let new_entry = "## v0.1.2 (2020-10-05)\n\n- change 1\nchange 2".to_string();
+
+        let res = change_gen.insert_entry(log, version, new_entry.to_string());
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_insert_entry_incorrect_header() {
+        let change_gen = ChangelogGenerator {};
+
+        let log = "# RELEASES".to_owned();
+        let version = "v0.1.2";
+        let new_entry = "## v0.1.2 (2020-10-05)\n\n- change 1\nchange 2".to_string();
+
+        let res = change_gen.insert_entry(log, version, new_entry.to_string());
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_insert_entry_just_header() {
+        let change_gen = ChangelogGenerator {};
+
+        let log = CHANGELOG_HEADER.to_owned();
+        let version = "v0.1.2";
+        let new_entry = "## v0.1.2 (2020-10-05)\n\n- change 1\nchange 2".to_string();
+
+        let res = change_gen
+            .insert_entry(log, version, new_entry.to_string())
+            .unwrap();
+        let expected = format!("{}{}\n", CHANGELOG_HEADER, new_entry);
+        assert_eq!(res, expected);
     }
 }
