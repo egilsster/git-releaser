@@ -13,7 +13,19 @@ Currently supports only versions from `package.json`.
 ## Usage
 
 ```sh
-cargo run ORG/REPO {patch, minor, major} GITHUB_TOKEN
+[RUST_LOG="debug"] cargo run {patch, minor, major}
+```
+
+Example
+
+```sh
+λ git-releaser minor
+[INFO] 📝 Current version is 0.8.1-0
+[INFO] 📎 Generating a changelog for v0.9.0
+[INFO] 📖 Here are the changes for 0.9.0:
+ - feat: added a new feature
+ - fix: fixed pesky bugs
+[INFO] 🚀 v0.9.0 has shipped!
 ```
 
 ## TODO
@@ -23,7 +35,6 @@ cargo run ORG/REPO {patch, minor, major} GITHUB_TOKEN
 - [ ] Create a Github release with the new changelog
 - [ ] Signed commits
 - [ ] Improve error handling
-- [ ] Improve logging
 - [ ] Unit test all the things
 - [ ] Read PR information for the repo instead of just git commits
 - [ ] Prompt to stash local changes so the working dir is clean during the release process

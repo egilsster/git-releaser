@@ -10,7 +10,7 @@ pub fn in_git_repository() -> Result<bool> {
 
 // Abort if there are changes in the directory, maybe ask to abort or stash and un-stash after
 // pub fn ensure_no_changes() {
-//     println!("ensuring no changes")
+//     debug!("ensuring no changes")
 // }
 
 /// Get the first commit
@@ -95,7 +95,7 @@ pub fn commit(commit_message: &str) -> Result<bool> {
     let args = vec!["commit", "-m", commit_message];
 
     if git(&args).is_err() {
-        println!("\nNo staged changes detected. Exiting.");
+        warn!("\nNo staged changes detected. Exiting.");
         std::process::exit(1);
     }
 
@@ -123,7 +123,7 @@ pub fn push_tag(tag_ver: &str) -> Result<Output> {
 
 /// Run a git command with arguments.
 fn git(args: &[&str]) -> Result<Output> {
-    println!("git {}", args.join(" "));
+    debug!("git {}", args.join(" "));
     let output = Command::new("git").args(args).output().unwrap();
     if output.status.success() {
         Ok(output)
