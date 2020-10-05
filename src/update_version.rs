@@ -47,7 +47,9 @@ pub fn update_version(version: &str, version_type: VersionType) -> String {
         }
         VersionType::Patch => {
             println!("Patch");
-            parsed.patch += 1;
+            if !parsed.is_prerelease() {
+                parsed.patch += 1;
+            }
             parsed.pre = vec![];
         }
         VersionType::Minor => {
@@ -64,7 +66,7 @@ pub fn update_version(version: &str, version_type: VersionType) -> String {
             parsed.pre = vec![];
         }
     }
-    return parsed.to_string();
+    parsed.to_string()
 }
 
 /// Updates the version file with the new version value
@@ -98,18 +100,28 @@ mod tests {
     fn test_update_version_patch() {
         let res = update_version("0.1.2", VersionType::Patch);
         assert_eq!(res, "0.1.3");
+        let res = update_version("0.1.2-0", VersionType::Patch);
+        assert_eq!(res, "0.1.2");
     }
 
     #[test]
     fn test_update_version_minor() {
         let res = update_version("0.1.2", VersionType::Minor);
         assert_eq!(res, "0.2.0");
+        let res = update_version("0.1.2-0", VersionType::Minor);
+        assert_eq!(res, "0.2.0");
+        let res = update_version("0.2.1-0", VersionType::Minor);
+        assert_eq!(res, "0.3.0");
     }
 
     #[test]
     fn test_update_version_major() {
         let res = update_version("0.1.2", VersionType::Major);
         assert_eq!(res, "1.0.0");
+        let res = update_version("0.1.0-0", VersionType::Major);
+        assert_eq!(res, "1.0.0");
+        let res = update_version("1.0.1-0", VersionType::Major);
+        assert_eq!(res, "2.0.0");
     }
 
     #[test]
