@@ -51,6 +51,21 @@ pub fn commits_in_log(args: &[String]) -> Result<Vec<Commit>> {
             .split("END")
             .filter(|e| e.len() > 2)
             .map(Commit::from)
+            .filter(|commit| {
+                // filter out the following:
+                // - `chore: releasing vX.Y.Z`
+                // - `chore: beginning development on vX.Y.Z`
+                // - `docs: updating changelog`
+
+                let subj = commit.subject.to_string();
+                if subj.starts_with("chore: releasing v")
+                    || subj.starts_with("chore: beginning development on v")
+                    || subj.starts_with("docs: updating changelog")
+                {
+                    return false;
+                }
+                true
+            })
             .collect::<Vec<Commit>>()
     })
 }

@@ -60,22 +60,19 @@ async fn main() -> Result<()> {
     // 3. Commit version file change and push that plus the new tag
     git::add_files(&["package.json"])?;
     git::commit(&format!("chore: releasing {}", tag_ver))?;
-    git::tag(tag_ver)?; // tagged commit, new version is name and version
-    git::push(main_branch)?;
-    git::push_tag(tag_ver)?;
 
     // 4. Generate a changelog, stage the CHANGELOG.md, commit that and push
     let changelog = change_gen.generate_changelog(main_branch, tag_ver).await?;
+    git::tag(tag_ver)?; // tagged commit, new version is name and version
     git::add_files(&["CHANGELOG.md"])?;
     git::commit("docs: updating changelog [ci skip]")?;
-    git::push(main_branch)?;
 
     // 5. Bump the working release number to prerelease
     let ver_file = fs::read_to_string(file_path).unwrap();
     let v: Value = serde_json::from_str(&ver_file).unwrap();
     let current_ver = v["version"].as_str().unwrap();
-    let new_ver = update_version::update_version(current_ver, VersionType::Prerelease);
-    let pre_ver = update_version::update_version_file(file_path, &new_ver);
+    let new_pre_ver = update_version::update_version(current_ver, VersionType::Prerelease);
+    let pre_ver = update_version::update_version_file(file_path, &new_pre_ver);
 
     // 6. Commit and push updated package.json file
     git::add_files(&["package.json"])?;
@@ -84,6 +81,7 @@ async fn main() -> Result<()> {
         pre_ver
     ))?;
     git::push(main_branch)?;
+    git::push_tag(tag_ver)?;
 
     // println!("✅ Enabling status checks on the main branch");
 

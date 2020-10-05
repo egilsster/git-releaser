@@ -18,9 +18,9 @@ impl ChangelogGenerator {
         // Find last tag
         let commits = match last_tag()? {
             Some(tag) => {
-                println!("📝 Current version is {}", tag);
+                println!("📝 Last version is {}", tag);
                 // Get commits from last tag
-                let range = format!("{}..{}", new_ver, main_branch);
+                let range = format!("{}..{}", tag, main_branch);
                 commits_in_log(&[range])?
             }
             None => {
@@ -40,16 +40,19 @@ impl ChangelogGenerator {
         let local: DateTime<Local> = Local::now();
         let current_date = local.date().format("%Y-%m-%d").to_string(); // e.g. 2020-10-04
         let version_header = format!("## {} ({})", version, current_date);
-        let commit_list = commits
-            .iter()
-            .map(|commit| format!("- {}\n", commit.compact()))
-            .collect::<String>();
 
-        let entry = format!("{}\n\n{}", version_header, commit_list);
+        let change_list = if commits.is_empty() {
+            "No commits since last version".to_string()
+        } else {
+            commits
+                .iter()
+                .map(|commit| format!("- {}\n", commit.compact()))
+                .collect::<String>()
+        };
 
-        let res = self.write_changelog(version, entry);
+        let entry = format!("{}\n\n{}", version_header, change_list);
 
-        Ok(res.is_ok())
+        self.write_changelog(version, entry)
     }
 
     // TODO(egilsster): When the header is not exactly what I expect, nothing gets
@@ -84,6 +87,9 @@ impl ChangelogGenerator {
     /// Creates a compact output of commits for the CLI to print in the terminal
     pub fn compact_changelog(&self, commits: Vec<Commit>) -> String {
         // This fn can be extended to display stats and other things
+        if commits.is_empty() {
+            return "No commits since last version".to_string();
+        }
 
         commits
             .into_iter()
