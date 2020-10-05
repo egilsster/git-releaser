@@ -13,12 +13,12 @@ impl ChangelogGenerator {
         main_branch: &str,
         new_ver: &str,
     ) -> Result<Vec<Commit>> {
-        println!("📎 Generating a changelog for {}", new_ver);
+        info!("📎 Generating a changelog for {}", new_ver);
 
         // Find last tag
         let commits = match last_tag()? {
             Some(tag) => {
-                println!("📝 Last version is {}", tag);
+                debug!("📝 Last version is {}", tag);
                 // Get commits from last tag
                 let range = format!("{}..{}", tag, main_branch);
                 commits_in_log(&[range])?
@@ -59,7 +59,7 @@ impl ChangelogGenerator {
     // added to the changelog, could probably just find a lvl1 header and replace it
     // with what I want. This also applies if the file is empty
     pub fn write_changelog(&self, version: &str, new_entry: String) -> Result<bool> {
-        println!("Add {} to CHANGELOG.md", version);
+        debug!("Add {} to CHANGELOG.md", version);
 
         let header = "# CHANGELOG\n\n";
 

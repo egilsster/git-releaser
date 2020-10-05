@@ -41,25 +41,25 @@ pub fn update_version(version: &str, version_type: VersionType) -> String {
 
     match version_type {
         VersionType::Prerelease => {
-            println!("Prerelease");
+            debug!("Prerelease");
             parsed.patch += 1;
             parsed.pre = vec![semver::Identifier::Numeric(0)];
         }
         VersionType::Patch => {
-            println!("Patch");
+            debug!("Patch");
             if !parsed.is_prerelease() {
                 parsed.patch += 1;
             }
             parsed.pre = vec![];
         }
         VersionType::Minor => {
-            println!("Minor");
+            debug!("Minor");
             parsed.minor += 1;
             parsed.patch = 0;
             parsed.pre = vec![];
         }
         VersionType::Major => {
-            println!("Major");
+            debug!("Major");
             parsed.major += 1;
             parsed.minor = 0;
             parsed.patch = 0;
@@ -77,7 +77,7 @@ pub fn update_version_file(file_path: &str, new_ver: &str) -> String {
 
     v["version"] = serde_json::to_value(&new_ver).unwrap();
 
-    println!("📝 New version is {}", new_ver);
+    debug!("📝 New version is {}", new_ver);
     let _res = fs::write(
         file_path,
         format!("{}\n", serde_json::to_string_pretty(&v).unwrap()),

@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate eyre;
+#[macro_use]
+extern crate log;
 
 extern crate semver;
 
@@ -10,9 +12,11 @@ mod update_version;
 
 use crate::git::in_git_repository;
 use crate::update_version::{map_version_type, VersionType};
+use env_logger::Env;
 use eyre::Result;
 use serde_json::Value;
 use std::fs;
+use std::io::Write;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -33,6 +37,11 @@ async fn main() -> Result<()> {
         version_type,
         // version_file,
     } = args;
+    let log_env = Env::default().default_filter_or("info");
+    env_logger::from_env(log_env)
+        .format(|buf, record| writeln!(buf, "[{}] {}", record.level(), record.args()))
+        .init();
+
     in_git_repository()?;
 
     let main_branch = "main";
@@ -42,7 +51,7 @@ async fn main() -> Result<()> {
 
     // git::ensure_no_changes();
 
-    // println!("⚠️  Disabling status checks on the main branch");
+    // info!("⚠️  Disabling status checks on the main branch");
 
     let file_path = "package.json";
 
@@ -52,7 +61,7 @@ async fn main() -> Result<()> {
     let ver_file = fs::read_to_string(file_path).unwrap();
     let v: Value = serde_json::from_str(&ver_file).unwrap();
     let current_ver = v["version"].as_str().unwrap();
-    println!("📝 Current version is {}", current_ver);
+    info!("📝 Current version is {}", current_ver);
     let new_ver = update_version::update_version(current_ver, version_type);
 
     // 2. Get the new version value
@@ -83,15 +92,15 @@ async fn main() -> Result<()> {
     git::push(main_branch)?;
     git::push_tag(tag_ver)?;
 
-    // println!("✅ Enabling status checks on the main branch");
+    // info!("✅ Enabling status checks on the main branch");
 
-    println!(
+    info!(
         "📖 Here are the changes for {}:\n{}",
         new_ver,
         change_gen.compact_changelog(changelog)
     );
 
-    println!("🚀 {} has shipped!", tag_ver);
+    info!("🚀 {} has shipped!", tag_ver);
 
     Ok(())
 }
