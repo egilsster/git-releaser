@@ -1,78 +1,97 @@
+#[macro_use]
+extern crate eyre;
+
 extern crate semver;
 
 mod changelog_gen;
+mod commit;
 mod git;
 mod update_version;
 
+use crate::git::in_git_repository;
 use crate::update_version::{map_version_type, VersionType};
+use eyre::Result;
 use serde_json::Value;
 use std::fs;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
 struct CliArgs {
-    repo: String,
     version_type: String,
-    github_api_token: String,
+    // version_file: String, // package.json, Cargo.toml
 }
 
 // REF https://github.com/github-changelog-generator/github-changelog-generator
 // REF https://docs.rs/git2/0.13.8/git2/struct.Repository.html
 
-// I need to have 3 commits because the tag uses the version number which has proper sem ver form
-// then I need to update to a pre-release version again so I am not adding commits with the released version
-//
-// or do I? I can probably perform work with the same version number, that means when running you are
-// essentially on the latest released plus any new changes.. hmm never mind, makes more sense having
-// a pre-release number since it is the thing that WILL be a new release
-fn main() {
+// Could probably have a config for main branch and stuff
+
+#[tokio::main]
+async fn main() -> Result<()> {
     let args = CliArgs::from_args();
     let CliArgs {
-        repo,
         version_type,
-        github_api_token,
+        // version_file,
     } = args;
+    in_git_repository()?;
+
+    let main_branch = "main";
     let version_type = map_version_type(&version_type);
 
-    git::ensure_no_changes();
+    let change_gen = changelog_gen::ChangelogGenerator {};
 
-    println!("⚠️  Disabling status checks on the main branch");
+    // git::ensure_no_changes();
+
+    // println!("⚠️  Disabling status checks on the main branch");
 
     let file_path = "package.json";
 
-    // TODO: Validation and error handling
-    // Support reading version.txt
+    // TODO(egilsster): Support reading Cargo.toml
+
+    // 1. Get current version value
     let ver_file = fs::read_to_string(file_path).unwrap();
     let v: Value = serde_json::from_str(&ver_file).unwrap();
     let current_ver = v["version"].as_str().unwrap();
     println!("📝 Current version is {}", current_ver);
     let new_ver = update_version::update_version(current_ver, version_type);
 
+    // 2. Get the new version value
     let tag_ver = &update_version::update_version_file(file_path, &new_ver);
-    git::commit(&format!("chore: releasing {}", tag_ver));
-    git::tag(tag_ver); // tagged commit, new version is name and version
-    git::push();
-    git::push_tag(tag_ver);
+    // 3. Commit version file change and push that plus the new tag
+    git::add_files(&["package.json"])?;
+    git::commit(&format!("chore: releasing {}", tag_ver))?;
+    git::tag(tag_ver)?; // tagged commit, new version is name and version
+    git::push(main_branch)?;
+    git::push_tag(tag_ver)?;
 
+    // 4. Generate a changelog, stage the CHANGELOG.md, commit that and push
+    let changelog = change_gen.generate_changelog(main_branch, tag_ver).await?;
+    git::add_files(&["CHANGELOG.md"])?;
+    git::commit("docs: updating changelog [ci skip]")?;
+    git::push(main_branch)?;
+
+    // 5. Bump the working release number to prerelease
     let ver_file = fs::read_to_string(file_path).unwrap();
     let v: Value = serde_json::from_str(&ver_file).unwrap();
     let current_ver = v["version"].as_str().unwrap();
-    println!("📝 Current version is {}", current_ver);
     let new_ver = update_version::update_version(current_ver, VersionType::Prerelease);
-
     let pre_ver = update_version::update_version_file(file_path, &new_ver);
+    git::add_files(&["package.json"])?;
     git::commit(&format!(
         "chore: beginning development on {} [ci skip]",
         pre_ver
-    ));
-    git::push();
+    ))?;
+    git::push(main_branch)?;
 
-    changelog_gen::generate_changelog(current_ver, tag_ver);
-    git::commit("docs: updating changelog [ci skip]");
-    git::push();
+    // println!("✅ Enabling status checks on the main branch");
 
-    println!("✅ Enabling status checks on the main branch");
+    println!(
+        "📖 Here are the changes for {}:\n{}",
+        new_ver,
+        change_gen.compact_changelog(changelog)
+    );
 
     println!("🚀 {} has shipped!", tag_ver);
-    // println!("Print a link to the commit or some useful statistics, maybe even the changelog in a compact form")
+
+    Ok(())
 }
