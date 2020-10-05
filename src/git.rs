@@ -35,7 +35,8 @@ pub fn last_tag() -> Result<Option<String>> {
 /// ## Example
 ///
 /// ```rust
-/// let commits: Vec<String> = commits_in_log()?;
+/// let range = "<commit a>..<commit b>".to_string();
+/// let commits: Vec<String> = commits_in_log(&[range])?;
 /// ```
 pub fn commits_in_log(args: &[String]) -> Result<Vec<Commit>> {
     // I hope this can be improved a bit, its a bit messy and hard to understand
@@ -142,5 +143,16 @@ mod tests {
     #[test]
     fn test_last_tag() {
         assert!(last_tag().is_ok());
+    }
+
+    #[test]
+    fn test_commits() {
+        let range =
+            "aa58f3dd441b7511fc0e7b9566732fc7e964f96c..6ebd873bfc3907ee0e40d5cb5c66bf17cc5c83fa"
+                .to_string();
+        let res = commits_in_log(&[range]).unwrap();
+
+        assert_eq!(res[0].abbreviated_commit, "6ebd873");
+        assert_eq!(res[0].author.name, "Egill Sveinbjörnsson");
     }
 }

@@ -76,6 +76,8 @@ async fn main() -> Result<()> {
     let current_ver = v["version"].as_str().unwrap();
     let new_ver = update_version::update_version(current_ver, VersionType::Prerelease);
     let pre_ver = update_version::update_version_file(file_path, &new_ver);
+
+    // 6. Commit and push updated package.json file
     git::add_files(&["package.json"])?;
     git::commit(&format!(
         "chore: beginning development on {} [ci skip]",

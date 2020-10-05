@@ -2,21 +2,21 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct User {
-    name: String,
-    email: String,
-    date: String,
+    pub name: String,
+    pub email: String,
+    pub date: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Commit {
-    commit: String,
-    abbreviated_commit: String,
-    refs: String,
-    subject: String,
-    sanitized_subject_line: String,
-    commit_notes: String,
-    author: User,
-    committer: User,
+    pub commit: String,
+    pub abbreviated_commit: String,
+    pub refs: String,
+    pub subject: String,
+    pub sanitized_subject_line: String,
+    pub commit_notes: String,
+    pub author: User,
+    pub committer: User,
 }
 
 impl Commit {
