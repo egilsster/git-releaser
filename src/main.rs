@@ -95,7 +95,7 @@ async fn main() -> Result<()> {
         "chore: beginning development on {} [ci skip]",
         pre_ver
     ))?;
-    info!("☁️  Pushing updates");
+    info!("📡 Pushing updates");
     git::push(main_branch)?;
     git::push_tag(new_ver)?;
 

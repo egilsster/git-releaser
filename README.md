@@ -22,7 +22,7 @@ Example
 λ git-releaser minor
 [INFO] 📝 Current version is 0.8.1-0
 [INFO] 📎 Generating a changelog for 0.9.0
-[INFO] ☁️ Pushing updates
+[INFO] 📡 Pushing updates
 [INFO] 📖 Here are the changes for 0.9.0:
  - feat: added a new feature
  - fix: fixed pesky bugs
