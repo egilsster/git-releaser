@@ -126,10 +126,7 @@ pub fn push_tag(tag_ver: &str) -> Result<Output> {
 /// Run a git command with arguments.
 fn git(args: &[&str]) -> Result<Output> {
     debug!("git {}", args.join(" "));
-    let output = Command::new("git")
-        .args(args)
-        .output()
-        .map_err(|e| eyre!(e.to_string()))?;
+    let output = Command::new("git").args(args).output()?;
     if output.status.success() {
         Ok(output)
     } else {
