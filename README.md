@@ -4,8 +4,6 @@
 ![Audit status](https://github.com/egilsster/git-releaser/workflows/audit/badge.svg?branch=main)
 [![codecov](https://codecov.io/gh/egilsster/git-releaser/branch/main/graph/badge.svg?token=HDVQ70Y2KZ)](https://codecov.io/gh/egilsster/git-releaser)
 
-*In development*
-
 A CLI tool to that creates a git tag, a changelog and a git release, all in one command.
 
 Supports TOML and JSON version files.
@@ -28,11 +26,3 @@ Example
  - fix: fixed pesky bugs
 [INFO] 🚀 0.9.0 has shipped!
 ```
-
-## TODO
-
-- Create a Github release with the new changelog
-- Unit test all the things
-- Read PR information for the repo instead of just git commits
-- Prompt to stash local changes so the working dir is clean during the release process
-- Add confirmation on the release that will be created
