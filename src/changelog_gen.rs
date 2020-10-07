@@ -2,6 +2,7 @@ use crate::commit::Commit;
 use crate::git::{commits_in_log, first_commit, last_tag};
 use chrono::prelude::*;
 use eyre::{Result, WrapErr};
+use semver::Version;
 use std::fs;
 
 static CHANGELOG_FILE_PATH: &str = "CHANGELOG.md";
@@ -10,11 +11,15 @@ static CHANGELOG_HEADER: &str = "# CHANGELOG\n\n";
 pub struct ChangelogGenerator {}
 
 impl ChangelogGenerator {
+    pub fn new() -> Self {
+        ChangelogGenerator {}
+    }
+
     // Generates a changelog between the current version and the new version
     pub async fn generate_changelog(
         &self,
         main_branch: &str,
-        new_ver: &str,
+        new_ver: &Version,
     ) -> Result<Vec<Commit>> {
         info!("📎 Generating a changelog for {}", new_ver);
 
@@ -39,7 +44,7 @@ impl ChangelogGenerator {
         Ok(commits)
     }
 
-    pub fn update_changelog(&self, commits: &[Commit], version: &str) -> Result<bool> {
+    pub fn update_changelog(&self, commits: &[Commit], version: &Version) -> Result<bool> {
         let current_date = Local::now().date().format("%Y-%m-%d").to_string(); // e.g. 2020-10-04
         let version_header = format!("## {} ({})", version, current_date);
 
@@ -62,7 +67,7 @@ impl ChangelogGenerator {
     pub fn insert_entry(
         &self,
         contents: String,
-        version: &str,
+        version: &Version,
         new_entry: String,
     ) -> Result<String> {
         if contents.contains(&format!("## {}", version)) {
@@ -98,7 +103,7 @@ impl ChangelogGenerator {
 
     /// Ensures the changelog is valid and injects the new changelog entry
     /// to the top of the file, below the header.
-    pub fn write_changelog(&self, version: &str, new_entry: String) -> Result<bool> {
+    pub fn write_changelog(&self, version: &Version, new_entry: String) -> Result<bool> {
         debug!("Add {} to CHANGELOG.md", version);
 
         let changelog_file_contents = self.read_changelog_contents()?;
@@ -132,7 +137,7 @@ mod tests {
         let change_gen = ChangelogGenerator {};
 
         let log = "".to_owned();
-        let version = "v0.1.2";
+        let version = &Version::parse("0.1.2").unwrap();
         let new_entry = "## v0.1.2 (2020-10-05)\n\n- change 1\nchange 2".to_string();
 
         let res = change_gen.insert_entry(log, version, new_entry.to_string());
@@ -144,7 +149,7 @@ mod tests {
         let change_gen = ChangelogGenerator {};
 
         let log = "# RELEASES".to_owned();
-        let version = "v0.1.2";
+        let version = &Version::parse("0.1.2").unwrap();
         let new_entry = "## v0.1.2 (2020-10-05)\n\n- change 1\nchange 2".to_string();
 
         let res = change_gen.insert_entry(log, version, new_entry.to_string());
@@ -156,7 +161,7 @@ mod tests {
         let change_gen = ChangelogGenerator {};
 
         let log = CHANGELOG_HEADER.to_owned();
-        let version = "v0.1.2";
+        let version = &Version::parse("0.1.2").unwrap();
         let new_entry = "## v0.1.2 (2020-10-05)\n\n- change 1\nchange 2".to_string();
 
         let res = change_gen

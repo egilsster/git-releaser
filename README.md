@@ -33,7 +33,6 @@ Example
 
 - Support Cargo.toml
 - Create a Github release with the new changelog
-- Signed commits
 - Unit test all the things
 - Read PR information for the repo instead of just git commits
 - Prompt to stash local changes so the working dir is clean during the release process

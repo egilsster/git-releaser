@@ -70,11 +70,13 @@ pub fn commits_in_log(args: &[String]) -> Result<Vec<Commit>> {
     })
 }
 
+// https://stackoverflow.com/questions/18659959/git-tag-sorted-in-chronological-order-of-the-date-of-the-commit-pointed-to/57901182#comment75323431_36636526
 /// Get the last n tags
 fn last_tags(n: i32) -> Result<Vec<String>> {
     git(&[
         "for-each-ref",
         &format!("--count={}", n),
+        // "--sort=-taggerdate",
         "--sort=-committerdate",
         "--format=%(refname:short)",
         "refs/tags/*",
