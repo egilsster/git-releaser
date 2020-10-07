@@ -21,12 +21,12 @@ impl ChangelogGenerator {
         main_branch: &str,
         new_ver: &Version,
     ) -> Result<Vec<Commit>> {
-        info!("📎 Generating a changelog for {}", new_ver);
+        info!("📎 Generating a changelog for v{}", new_ver);
 
         // Find last tag
         let commits = match last_tag()? {
             Some(tag) => {
-                debug!("📝 Last version is {}", tag);
+                debug!("📝 Last version is v{}", tag);
                 // Get commits from last tag
                 let range = format!("{}..{}", tag, main_branch);
                 commits_in_log(&[range])?
@@ -46,10 +46,10 @@ impl ChangelogGenerator {
 
     pub fn update_changelog(&self, commits: &[Commit], version: &Version) -> Result<bool> {
         let current_date = Local::now().date().format("%Y-%m-%d").to_string(); // e.g. 2020-10-04
-        let version_header = format!("## {} ({})", version, current_date);
+        let version_header = format!("## v{} ({})", version, current_date);
 
         let change_list = if commits.is_empty() {
-            "No commits since last version".to_string()
+            "No commits since last version\n".to_string()
         } else {
             commits
                 .iter()
