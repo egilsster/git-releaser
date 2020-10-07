@@ -98,8 +98,7 @@ impl VersionFile {
 pub fn read_version_file(version_filetype: &VersionFiletype, file_path: &str) -> Result<Version> {
     match version_filetype {
         VersionFiletype::TOML => {
-            let ver_file =
-                fs::read_to_string(file_path).wrap_err("Could not read TOML version file")?;
+            let ver_file = fs::read_to_string(file_path)?;
             let v: toml::Value = toml::from_str(&ver_file).wrap_err("Could not parse TOML file")?;
             let package_info = v.get("package");
 
@@ -113,8 +112,7 @@ pub fn read_version_file(version_filetype: &VersionFiletype, file_path: &str) ->
             }
         }
         VersionFiletype::JSON => {
-            let ver_file =
-                fs::read_to_string(file_path).wrap_err("Could not read JSON version file")?;
+            let ver_file = fs::read_to_string(file_path)?;
             let v: serde_json::Value =
                 serde_json::from_str(&ver_file).wrap_err("Could not parse JSON file")?;
 
@@ -144,10 +142,7 @@ pub fn get_lockfile(version_filetype: &VersionFiletype) -> Option<String> {
 // https://internals.rust-lang.org/t/pre-rfc-cargo-command-to-just-sync-lockfile/13119
 pub fn sync_cargo_lockfile() -> Result<bool> {
     debug!("Sync Cargo.lock");
-    let output = Command::new("cargo")
-        .args(&["check"])
-        .output()
-        .wrap_err("'cargo check' failed")?;
+    let output = Command::new("cargo").args(&["check"]).output()?;
     Ok(output.status.success())
 }
 

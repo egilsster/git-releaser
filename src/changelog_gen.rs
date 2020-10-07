@@ -1,7 +1,7 @@
 use crate::commit::Commit;
 use crate::git::{commits_in_log, first_commit, last_tag};
 use chrono::prelude::*;
-use eyre::{Result, WrapErr};
+use eyre::Result;
 use semver::Version;
 use std::fs;
 
@@ -86,19 +86,16 @@ impl ChangelogGenerator {
         // File does probably not exist when it can not be read
         // so create a file with the header
         if fs::read_to_string(CHANGELOG_FILE_PATH).is_err() {
-            fs::write(CHANGELOG_FILE_PATH, CHANGELOG_HEADER)
-                .wrap_err("Could not write CHANGELOG.md")?;
+            fs::write(CHANGELOG_FILE_PATH, CHANGELOG_HEADER)?;
         }
 
-        let contents =
-            fs::read_to_string(CHANGELOG_FILE_PATH).wrap_err("Could not read CHANGELOG.md")?;
-
+        let contents = fs::read_to_string(CHANGELOG_FILE_PATH)?;
         if contents.is_empty() {
-            fs::write(CHANGELOG_FILE_PATH, CHANGELOG_HEADER)
-                .wrap_err("Could not write CHANGELOG.md")?;
+            fs::write(CHANGELOG_FILE_PATH, CHANGELOG_HEADER)?;
         }
 
-        fs::read_to_string(CHANGELOG_FILE_PATH).wrap_err("Could not read CHANGELOG.md")
+        let contents = fs::read_to_string(CHANGELOG_FILE_PATH)?;
+        Ok(contents)
     }
 
     /// Ensures the changelog is valid and injects the new changelog entry
