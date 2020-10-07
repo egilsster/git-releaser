@@ -19,6 +19,7 @@ Example
 ```txt
 λ git-releaser minor Cargo.toml
 [INFO] 📝 Current version is 0.8.1-0
+Do you want to release 0.9.0? yes
 [INFO] 📎 Generating a changelog for 0.9.0
 [INFO] 📡 Pushing updates
 [INFO] 📖 Here are the changes for 0.9.0:
