@@ -8,18 +8,18 @@
 
 A CLI tool to that creates a git tag, a changelog and a git release, all in one command.
 
-Currently supports only versions from `package.json`.
+Supports TOML and JSON version files.
 
 ## Usage
 
 ```sh
-[RUST_LOG="debug"] cargo run {patch, minor, major}
+[RUST_LOG="debug"] cargo run {patch, minor, major} [package.json|Cargo.toml]
 ```
 
 Example
 
 ```txt
-λ git-releaser minor
+λ git-releaser minor Cargo.toml
 [INFO] 📝 Current version is 0.8.1-0
 [INFO] 📎 Generating a changelog for 0.9.0
 [INFO] 📡 Pushing updates
@@ -31,7 +31,6 @@ Example
 
 ## TODO
 
-- Support Cargo.toml
 - Create a Github release with the new changelog
 - Unit test all the things
 - Read PR information for the repo instead of just git commits

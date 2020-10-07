@@ -85,9 +85,9 @@ fn last_tags(n: i32) -> Result<Vec<String>> {
 }
 
 /// Stages the specified files.
-pub fn add_files(files: &[&str]) -> Result<Output> {
-    let files_to_add = files.join(" ");
-    let add_args = vec!["add", files_to_add.as_ref()];
+pub fn add_files(files: Vec<String>) -> Result<Output> {
+    let mut add_args = vec!["add"];
+    files.iter().for_each(|file| add_args.push(file.as_ref()));
     git(&add_args)
 }
 

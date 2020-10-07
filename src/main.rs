@@ -23,7 +23,7 @@ use structopt::StructOpt;
 #[derive(StructOpt)]
 struct CliArgs {
     version_type: String,
-    // version_file: String, // list supported version files in help
+    version_file: String, // list supported version files in help
 }
 
 // REF https://github.com/github-changelog-generator/github-changelog-generator
@@ -36,7 +36,7 @@ async fn main() -> Result<()> {
     let args = CliArgs::from_args();
     let CliArgs {
         version_type,
-        // version_file,
+        version_file,
     } = args;
     let log_env = Env::default().default_filter_or("info");
     env_logger::from_env(log_env)
@@ -45,15 +45,12 @@ async fn main() -> Result<()> {
 
     in_git_repository()?;
 
-    let version_file = "package.json".to_string();
-
     let version_type = map_version_type(&version_type);
     let change_gen = ChangelogGenerator::new();
 
     // git::ensure_no_changes();
 
     let mut version_file = VersionFile::new(version_file)?;
-    let version_file_filename = &version_file.filename.to_owned();
 
     // 1. Get current version value
     let current_ver = version_file.get_version_value();
@@ -65,13 +62,13 @@ async fn main() -> Result<()> {
     version_file.update_version_file(new_ver)?;
 
     // 3. Commit version file change and push that plus the new tag
-    git::add_files(&[version_file_filename])?;
+    git::add_files(version_file.get_tracked_files())?;
     git::commit(&format!("chore: releasing {}", new_ver))?;
 
     // 4. Generate a changelog, stage the CHANGELOG.md, commit that and push
     let changelog = change_gen.generate_changelog(MAIN_BRANCH, new_ver).await?;
     git::tag(&new_ver.to_string())?; // tagged commit, new version is name and version
-    git::add_files(&["CHANGELOG.md"])?;
+    git::add_files(vec!["CHANGELOG.md".to_owned()])?;
     git::commit("docs: updating changelog [ci skip]")?;
 
     // 5. Bump the working release number to prerelease
@@ -80,7 +77,7 @@ async fn main() -> Result<()> {
     version_file.update_version_file(pre_ver)?;
 
     // 6. Commit and push updated package.json file
-    git::add_files(&[version_file_filename])?;
+    git::add_files(version_file.get_tracked_files())?;
     git::commit(&format!(
         "chore: beginning development on {} [ci skip]",
         pre_ver
