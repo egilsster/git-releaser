@@ -49,19 +49,17 @@ async fn main() -> Result<()> {
     let version_type = map_version_type(&version_type);
     let change_gen = ChangelogGenerator::new();
 
-    // git::ensure_no_changes();
-
     let mut version_file = VersionFile::new(version_file)?;
 
     // 1. Get current version value
     let current_ver = version_file.get_version_value();
-    info!("📝 Current version is {}", current_ver);
+    info!("📝 Current version is v{}", current_ver);
 
     // 2. Get the new version value
     let new_ver = &update_version(current_ver.to_owned(), version_type)?;
-    debug!("📝 New version is {}", new_ver);
+    debug!("📝 New version is v{}", new_ver);
 
-    let prompt_text = format!("Do you want to release {}?", new_ver);
+    let prompt_text = format!("Do you want to release v{}?", new_ver);
     if !Confirm::new().with_prompt(prompt_text).interact()? {
         std::process::exit(0);
     }
@@ -74,7 +72,8 @@ async fn main() -> Result<()> {
 
     // 4. Generate a changelog, stage the CHANGELOG.md, commit that and push
     let changelog = change_gen.generate_changelog(MAIN_BRANCH, new_ver).await?;
-    git::tag(&new_ver.to_string())?; // tagged commit, new version is name and version
+    let new_git_tag = &format!("v{}", new_ver.to_string());
+    git::tag(new_git_tag)?; // tagged commit, new version is name and version
     git::add_files(vec!["CHANGELOG.md".to_owned()])?;
     git::commit("docs: updating changelog [ci skip]")?;
 
@@ -91,15 +90,15 @@ async fn main() -> Result<()> {
     ))?;
     info!("📡 Pushing updates");
     git::push(MAIN_BRANCH)?;
-    git::push_tag(&new_ver.to_string())?;
+    git::push_tag(new_git_tag)?;
 
     info!(
-        "📖 Here are the changes for {}:\n{}",
+        "📖 Here are the changes for v{}:\n{}",
         new_ver,
         change_gen.compact_changelog(changelog)
     );
 
-    info!("🚀 {} has shipped!", new_ver);
+    info!("🚀 v{} has shipped!", new_ver);
 
     Ok(())
 }

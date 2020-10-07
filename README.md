@@ -18,12 +18,12 @@ Example
 
 ```txt
 λ git-releaser minor Cargo.toml
-[INFO] 📝 Current version is 0.8.1-0
-Do you want to release 0.9.0? yes
-[INFO] 📎 Generating a changelog for 0.9.0
+[INFO] 📝 Current version is v0.8.1-0
+Do you want to release v0.9.0? yes
+[INFO] 📎 Generating a changelog for v0.9.0
 [INFO] 📡 Pushing updates
-[INFO] 📖 Here are the changes for 0.9.0:
+[INFO] 📖 Here are the changes for v0.9.0:
  - feat: added a new feature
  - fix: fixed pesky bugs
-[INFO] 🚀 0.9.0 has shipped!
+[INFO] 🚀 v0.9.0 has shipped!
 ```
