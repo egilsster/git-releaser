@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
     } = args;
     let log_env = Env::default().default_filter_or("info");
     env_logger::from_env(log_env)
-        .format(|buf, record| writeln!(buf, "[{}] {}", record.level(), record.args()))
+        .format(|buf, record| writeln!(buf, "{}", record.args()))
         .init();
 
     in_git_repository()?;
