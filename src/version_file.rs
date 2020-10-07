@@ -77,8 +77,6 @@ impl VersionFile {
             }
         };
 
-        debug!("📝 New version is {}", new_ver);
-
         self.version_value = new_ver.to_owned();
 
         Ok(())

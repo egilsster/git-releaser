@@ -15,6 +15,7 @@ use crate::changelog_gen::ChangelogGenerator;
 use crate::git::in_git_repository;
 use crate::update_version::{map_version_type, update_version, VersionType};
 use crate::version_file::VersionFile;
+use dialoguer::Confirm;
 use env_logger::Env;
 use eyre::Result;
 use std::io::Write;
@@ -58,6 +59,12 @@ async fn main() -> Result<()> {
 
     // 2. Get the new version value
     let new_ver = &update_version(current_ver.to_owned(), version_type)?;
+    debug!("📝 New version is {}", new_ver);
+
+    let prompt_text = format!("Do you want to release {}?", new_ver);
+    if !Confirm::new().with_prompt(prompt_text).interact()? {
+        std::process::exit(0);
+    }
 
     version_file.update_version_file(new_ver)?;
 
