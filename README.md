@@ -11,10 +11,18 @@ Supports TOML and JSON version files.
 ## Usage
 
 ```sh
-[RUST_LOG="debug"] cargo run {patch, minor, major} [package.json|Cargo.toml]
+git-releaser -t [patch|minor|major] -f [package.json|Cargo.toml] --main-branch main [--log-level debug]
 ```
 
 Example
+
+```sh
+git-releaser -t minor -f package.json -b main
+```
+
+See `git-releaser --help` for more information on usage.
+
+### Example
 
 ```txt
 λ git-releaser minor Cargo.toml

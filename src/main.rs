@@ -21,25 +21,34 @@ use eyre::Result;
 use std::io::Write;
 use structopt::StructOpt;
 
-#[derive(StructOpt)]
+#[derive(StructOpt, Debug)]
+#[structopt(about = "\ngit-releaser -t [major|minor|patch] -f package.json -b main")]
 struct CliArgs {
+    #[structopt(short, long, default_value = "info")]
+    log_level: String,
+
+    #[structopt(short = "t", long = "type")]
     version_type: String,
-    version_file: String, // list supported version files in help
+
+    #[structopt(short = "f", long = "file")]
+    version_file: String,
+
+    #[structopt(short = "b", long)]
+    main_branch: String,
 }
 
 // REF https://github.com/github-changelog-generator/github-changelog-generator
-
-// Could probably have a config for main branch and stuff
-static MAIN_BRANCH: &str = "main";
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = CliArgs::from_args();
     let CliArgs {
+        log_level,
         version_type,
         version_file,
+        main_branch,
     } = args;
-    let log_env = Env::default().default_filter_or("info");
+    let log_env = Env::default().filter(log_level);
     env_logger::from_env(log_env)
         .format(|buf, record| writeln!(buf, "{}", record.args()))
         .init();
@@ -71,7 +80,7 @@ async fn main() -> Result<()> {
     git::commit(&format!("chore: releasing {}", new_ver))?;
 
     // 4. Generate a changelog, stage the CHANGELOG.md, commit that and push
-    let changelog = change_gen.generate_changelog(MAIN_BRANCH, new_ver).await?;
+    let changelog = change_gen.generate_changelog(&main_branch, new_ver).await?;
     let new_git_tag = &format!("v{}", new_ver.to_string());
     git::tag(new_git_tag)?; // tagged commit, new version is name and version
     git::add_files(vec!["CHANGELOG.md".to_owned()])?;
@@ -89,7 +98,7 @@ async fn main() -> Result<()> {
         pre_ver
     ))?;
     info!("📡 Pushing updates");
-    git::push(MAIN_BRANCH)?;
+    git::push(&main_branch)?;
     git::push_tag(new_git_tag)?;
 
     info!(
