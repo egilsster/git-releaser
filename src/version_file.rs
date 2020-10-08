@@ -100,7 +100,7 @@ pub fn read_version_file(version_filetype: &VersionFiletype, file_path: &str) ->
     match version_filetype {
         VersionFiletype::TOML => {
             let ver_file = fs::read_to_string(file_path)?;
-            let v: toml::Value = toml::from_str(&ver_file).wrap_err("Could not parse TOML file")?;
+            let v: toml::Value = toml::from_str(&ver_file)?;
             let package_info = v.get("package");
 
             if package_info.is_none() {
@@ -114,8 +114,7 @@ pub fn read_version_file(version_filetype: &VersionFiletype, file_path: &str) ->
         }
         VersionFiletype::JSON => {
             let ver_file = fs::read_to_string(file_path)?;
-            let v: serde_json::Value =
-                serde_json::from_str(&ver_file).wrap_err("Could not parse JSON file")?;
+            let v: serde_json::Value = serde_json::from_str(&ver_file)?;
 
             match v.get("version") {
                 Some(ver) => ver.as_str().unwrap().to_version(),
@@ -247,7 +246,7 @@ edition = "2018"
 
     #[test]
     fn test_read_version_file_package_json_invalid() {
-        let test_file = "test.json";
+        let test_file = "invalid.json";
         let contents = r#"
             {
                 "name": "testing",
@@ -259,8 +258,8 @@ edition = "2018"
         fs::write(test_file, contents).unwrap();
 
         let v = read_version_file(&VersionFiletype::JSON, test_file);
-        fs::remove_file(&test_file).unwrap();
         assert!(v.is_err());
+        fs::remove_file(&test_file).unwrap();
     }
 
     #[test]
