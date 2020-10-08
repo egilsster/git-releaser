@@ -70,7 +70,7 @@ impl ChangelogGenerator {
         version: &Version,
         new_entry: String,
     ) -> Result<String> {
-        if contents.contains(&format!("## {}", version)) {
+        if contents.contains(&format!("## v{}", version)) {
             return Err(eyre!("Version entry already in CHANGELOG.md"));
         }
         if !contents.starts_with("# CHANGELOG") {
@@ -128,12 +128,30 @@ impl ChangelogGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::commit;
+
+    #[test]
+    fn test_update_changelog() {
+        //
+    }
 
     #[test]
     fn test_insert_entry_empty() {
         let change_gen = ChangelogGenerator {};
 
         let log = "".to_owned();
+        let version = &Version::parse("0.1.2").unwrap();
+        let new_entry = "## v0.1.2 (2020-10-05)\n\n- change 1\nchange 2".to_string();
+
+        let res = change_gen.insert_entry(log, version, new_entry.to_string());
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_insert_entry_already_exists() {
+        let change_gen = ChangelogGenerator {};
+
+        let log = "# CHANGELOG\n\n## v0.1.2 (2020-10-04)".to_owned();
         let version = &Version::parse("0.1.2").unwrap();
         let new_entry = "## v0.1.2 (2020-10-05)\n\n- change 1\nchange 2".to_string();
 
@@ -166,5 +184,45 @@ mod tests {
             .unwrap();
         let expected = format!("{}{}\n", CHANGELOG_HEADER, new_entry);
         assert_eq!(res, expected);
+    }
+
+    #[test]
+    fn test_compact_changelog() {
+        let change_gen = ChangelogGenerator {};
+
+        let user = commit::User {
+            name: "name".to_string(),
+            email: "email".to_string(),
+            date: "date".to_string(),
+        };
+
+        let non_empty: Vec<Commit> = vec![
+            commit::Commit {
+                commit: "commit2".to_string(),
+                abbreviated_commit: "abb_commit2".to_string(),
+                refs: "refs2".to_string(),
+                commit_notes: "commit_notes".to_string(),
+                subject: "second".to_string(),
+                sanitized_subject_line: "sanitized-subject-line".to_string(),
+                author: user.to_owned(),
+                committer: user.to_owned(),
+            },
+            commit::Commit {
+                commit: "commit1".to_string(),
+                abbreviated_commit: "abb_commit1".to_string(),
+                refs: "refs1".to_string(),
+                commit_notes: "commit_notes".to_string(),
+                subject: "first".to_string(),
+                sanitized_subject_line: "sanitized-subject-line".to_string(),
+                author: user.to_owned(),
+                committer: user.to_owned(),
+            },
+        ];
+        let non_empty_expected = " - second\n - first\n".to_string();
+        assert_eq!(change_gen.compact_changelog(non_empty), non_empty_expected);
+
+        let empty: Vec<Commit> = vec![];
+        let empty_expected = "No commits since last version".to_string();
+        assert_eq!(change_gen.compact_changelog(empty), empty_expected);
     }
 }
