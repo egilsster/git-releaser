@@ -55,10 +55,10 @@ async fn main() -> Result<()> {
 
     in_git_repository()?;
 
-    let version_type = map_version_type(&version_type);
+    let version_type = map_version_type(&version_type)?;
     let change_gen = ChangelogGenerator::new();
 
-    let mut version_file = VersionFile::new(version_file)?;
+    let mut version_file = VersionFile::new(&version_file)?;
 
     // 1. Get current version value
     let current_ver = version_file.get_version_value();

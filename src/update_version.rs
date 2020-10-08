@@ -1,6 +1,7 @@
 use eyre::Result;
 use semver::Version;
 
+#[derive(PartialEq, Debug)]
 pub enum VersionType {
     Prerelease,
     Patch,
@@ -8,13 +9,13 @@ pub enum VersionType {
     Major,
 }
 
-pub fn map_version_type(version_type_str: &str) -> VersionType {
+pub fn map_version_type(version_type_str: &str) -> Result<VersionType> {
     match version_type_str.to_lowercase().as_ref() {
-        "prerelease" => VersionType::Prerelease,
-        "patch" => VersionType::Patch,
-        "minor" => VersionType::Minor,
-        "major" => VersionType::Major,
-        _ => panic!("Invalid version type"),
+        "prerelease" => Ok(VersionType::Prerelease),
+        "patch" => Ok(VersionType::Patch),
+        "minor" => Ok(VersionType::Minor),
+        "major" => Ok(VersionType::Major),
+        _ => Err(eyre!("Invalid version type")),
     }
 }
 
@@ -69,6 +70,20 @@ pub fn update_version(mut version: Version, version_type: VersionType) -> Result
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::panic;
+
+    #[test]
+    fn test_map_version_type_valid() {
+        assert_eq!(
+            map_version_type("Prerelease").unwrap(),
+            VersionType::Prerelease
+        );
+        assert_eq!(map_version_type("patch").unwrap(), VersionType::Patch);
+        assert_eq!(map_version_type("minoR").unwrap(), VersionType::Minor);
+        assert_eq!(map_version_type("major").unwrap(), VersionType::Major);
+
+        assert!(map_version_type("foo").is_err());
+    }
 
     fn to_version(version: &str) -> Version {
         Version::parse(version).unwrap()

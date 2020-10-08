@@ -18,11 +18,10 @@ pub fn first_commit() -> Result<String> {
     let log_args = vec!["log", "--reverse", "--format=format:%H"];
     let commits: Vec<String> = git(&log_args).map(|o| read_lines(&o))?;
 
-    if commits.is_empty() {
-        return Err(eyre!("No commits have been made"));
+    match commits.first() {
+        Some(first_commit) => Ok(first_commit.to_owned()),
+        None => Err(eyre!("No commits have been made")),
     }
-
-    Ok(commits[0].to_owned())
 }
 
 /// Get the last tag
@@ -91,17 +90,16 @@ pub fn add_files(files: Vec<String>) -> Result<Output> {
     git(&add_args)
 }
 
-/// Commits all staged files with the given message.
-/// Exists if there are no staged files.
+/// Commits staged files with the given message.
+/// Errors if there are no staged files.
 pub fn commit(commit_message: &str) -> Result<bool> {
     let args = vec!["commit", "-m", commit_message];
 
     if git(&args).is_err() {
-        warn!("\nNo staged changes detected. Exiting.");
-        std::process::exit(1);
+        Err(eyre!("\nNo staged changes detected. Exiting."))
+    } else {
+        Ok(true)
     }
-
-    Ok(true)
 }
 
 pub fn tag(new_tag: &str) -> Result<Output> {
@@ -158,6 +156,11 @@ mod tests {
     }
 
     #[test]
+    fn test_first_commit() {
+        assert!(first_commit().is_ok());
+    }
+
+    #[test]
     fn test_last_tag() {
         assert!(last_tag().is_ok());
     }
@@ -172,5 +175,14 @@ mod tests {
 
         assert_eq!(res[0].abbreviated_commit, "6ebd873");
         assert_eq!(res[0].author.name, "Egill Sveinbjörnsson");
+    }
+
+    #[test]
+    fn test_add_files() {
+        let files: Vec<String> = vec!["non-existing-file.tmp".to_owned()];
+        assert!(add_files(files).is_err());
+
+        let files: Vec<String> = vec!["README.md".to_owned()];
+        assert!(add_files(files).is_ok());
     }
 }
