@@ -70,7 +70,6 @@ pub fn update_version(mut version: Version, version_type: VersionType) -> Result
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::panic;
 
     #[test]
     fn test_map_version_type_valid() {
