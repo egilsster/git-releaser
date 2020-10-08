@@ -3,6 +3,7 @@ use semver::Version;
 use std::fs;
 use std::process::Command;
 
+#[derive(Debug, PartialEq)]
 pub enum VersionFiletype {
     TOML,
     JSON,
@@ -38,17 +39,17 @@ pub struct VersionFile {
 }
 
 impl VersionFile {
-    pub fn new(filename: String) -> Result<Self> {
+    pub fn new(filename: &str) -> Result<Self> {
         if !is_version_file_supported(&filename) {
             return Err(eyre!("The specified version file is not supported"));
         }
 
-        let version_filetype = VersionFiletype::from_str(&filename)?;
-        let version_value = read_version_file(&version_filetype, &filename)?;
+        let version_filetype = VersionFiletype::from_str(filename)?;
+        let version_value = read_version_file(&version_filetype, filename)?;
         let lockfile = get_lockfile(&version_filetype);
 
         Ok(VersionFile {
-            filename,
+            filename: filename.to_owned(),
             version_value,
             version_filetype,
             lockfile,
@@ -108,7 +109,7 @@ pub fn read_version_file(version_filetype: &VersionFiletype, file_path: &str) ->
 
             match package_info.unwrap().get("version") {
                 Some(ver) => ver.as_str().unwrap().to_version(),
-                None => panic!("Version property is not valid"),
+                None => Err(eyre!("Version property is not valid")),
             }
         }
         VersionFiletype::JSON => {
@@ -118,7 +119,7 @@ pub fn read_version_file(version_filetype: &VersionFiletype, file_path: &str) ->
 
             match v.get("version") {
                 Some(ver) => ver.as_str().unwrap().to_version(),
-                None => panic!("Version property is not valid"),
+                None => Err(eyre!("Version property is not valid")),
             }
         }
     }
@@ -151,6 +152,32 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_version_filetype_from_str() {
+        assert_eq!(
+            VersionFiletype::from_str("package.json").unwrap(),
+            VersionFiletype::JSON
+        );
+        assert_eq!(
+            VersionFiletype::from_str("version.json").unwrap(),
+            VersionFiletype::JSON
+        );
+        assert_eq!(
+            VersionFiletype::from_str("Cargo.toml").unwrap(),
+            VersionFiletype::TOML
+        );
+        assert_eq!(
+            VersionFiletype::from_str("version.toml").unwrap(),
+            VersionFiletype::TOML
+        );
+        assert!(VersionFiletype::from_str("version.txt").is_err(),);
+    }
+
+    #[test]
+    fn test_new_version_file_invalid() {
+        assert!(VersionFile::new("version.txt").is_err());
+    }
+
+    #[test]
     #[ignore = "Syncing the cargo lock isn't working on ci"]
     fn test_update_version_file_cargo_toml() {
         let test_file = "Cargo_test.toml";
@@ -164,7 +191,7 @@ edition = "2018"
 
         fs::write(test_file, contents).unwrap();
 
-        let mut v = VersionFile::new(test_file.to_owned()).unwrap();
+        let mut v = VersionFile::new(test_file).unwrap();
 
         v.update_version_file(&Version::parse("1.0.0").unwrap())
             .unwrap();
@@ -198,7 +225,7 @@ edition = "2018"
 
         fs::write(test_file, contents).unwrap();
 
-        let mut v = VersionFile::new(test_file.to_owned()).unwrap();
+        let mut v = VersionFile::new(test_file).unwrap();
 
         v.update_version_file(&Version::parse("0.2.6").unwrap())
             .unwrap();
@@ -219,6 +246,24 @@ edition = "2018"
     }
 
     #[test]
+    fn test_read_version_file_package_json_invalid() {
+        let test_file = "test.json";
+        let contents = r#"
+            {
+                "name": "testing",
+                "author": "me"
+            }
+        "#
+        .to_owned();
+
+        fs::write(test_file, contents).unwrap();
+
+        let v = read_version_file(&VersionFiletype::JSON, test_file);
+        fs::remove_file(&test_file).unwrap();
+        assert!(v.is_err());
+    }
+
+    #[test]
     fn test_is_version_file_supported() {
         assert!(is_version_file_supported("Cargo.toml") == true);
         assert!(is_version_file_supported("Cargo_test.toml") == true);
@@ -233,6 +278,9 @@ edition = "2018"
         let ver = "0.1.2";
         let res = ver.to_version().unwrap();
         assert_eq!(res.to_string(), ver);
+
+        assert!("foo".to_version().is_err());
+        assert!("1.0.0.0".to_version().is_err());
     }
 
     #[test]
