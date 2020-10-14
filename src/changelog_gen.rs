@@ -45,20 +45,7 @@ impl ChangelogGenerator {
     }
 
     pub fn update_changelog(&self, commits: &[Commit], version: &Version) -> Result<bool> {
-        let current_date = Local::now().date().format("%Y-%m-%d").to_string(); // e.g. 2020-10-04
-        let version_header = format!("## v{} ({})", version, current_date);
-
-        let change_list = if commits.is_empty() {
-            "No commits since last version\n".to_string()
-        } else {
-            commits
-                .iter()
-                .map(|commit| format!("- {}\n", commit.compact()))
-                .collect::<String>()
-        };
-
-        let entry = format!("{}\n\n{}", version_header, change_list);
-
+        let entry = self.markdown_changelog(commits, Some(version));
         self.write_changelog(version, entry)
     }
 
@@ -111,15 +98,35 @@ impl ChangelogGenerator {
         Ok(write_res.is_ok())
     }
 
-    /// Creates a compact output of commits for the CLI to print in the terminal
-    pub fn compact_changelog(&self, commits: Vec<Commit>) -> String {
+    /// Creates a changelog in markdown format.
+    pub fn markdown_changelog(&self, commits: &[Commit], version: Option<&Version>) -> String {
+        let current_date = Local::now().date().format("%Y-%m-%d").to_string(); // e.g. 2020-10-04
+        let version_header = match version {
+            Some(version) => format!("## v{} ({})", version, current_date),
+            None => format!("## {}", current_date),
+        };
+
+        let change_list = if commits.is_empty() {
+            "No commits since last version\n".to_string()
+        } else {
+            commits
+                .iter()
+                .map(|commit| format!("- {}\n", commit.compact()))
+                .collect::<String>()
+        };
+
+        format!("{}\n\n{}", version_header, change_list)
+    }
+
+    /// Creates a compact output of commits for the CLI to print in the terminal.
+    pub fn compact_changelog(&self, commits: &[Commit]) -> String {
         // This fn can be extended to display stats and other things
         if commits.is_empty() {
             return "No commits since last version".to_string();
         }
 
         commits
-            .into_iter()
+            .iter()
             .map(|commit| format!(" - {}\n", commit.compact()))
             .collect::<String>()
     }
@@ -187,6 +194,50 @@ mod tests {
     }
 
     #[test]
+    fn test_markdown_changelog() {
+        let change_gen = ChangelogGenerator {};
+        let ver = &Version::parse("1.2.3").unwrap();
+
+        let user = commit::User {
+            name: "name".to_string(),
+            email: "email".to_string(),
+            date: "date".to_string(),
+        };
+
+        let non_empty: Vec<Commit> = vec![
+            commit::Commit {
+                commit: "commit2".to_string(),
+                abbreviated_commit: "abb_commit2".to_string(),
+                refs: "refs2".to_string(),
+                commit_notes: "commit_notes".to_string(),
+                subject: "second".to_string(),
+                sanitized_subject_line: "sanitized-subject-line".to_string(),
+                author: user.to_owned(),
+                committer: user.to_owned(),
+            },
+            commit::Commit {
+                commit: "commit1".to_string(),
+                abbreviated_commit: "abb_commit1".to_string(),
+                refs: "refs1".to_string(),
+                commit_notes: "commit_notes".to_string(),
+                subject: "first".to_string(),
+                sanitized_subject_line: "sanitized-subject-line".to_string(),
+                author: user.to_owned(),
+                committer: user.to_owned(),
+            },
+        ];
+        let non_empty_expected = "## v1.2.3 (2020-10-14)\n\n- second\n- first\n".to_string();
+        assert_eq!(
+            change_gen.markdown_changelog(&non_empty, Some(ver)),
+            non_empty_expected
+        );
+
+        let empty: Vec<Commit> = vec![];
+        let empty_expected = "## 2020-10-14\n\nNo commits since last version\n".to_string();
+        assert_eq!(change_gen.markdown_changelog(&empty, None), empty_expected);
+    }
+
+    #[test]
     fn test_compact_changelog() {
         let change_gen = ChangelogGenerator {};
 
@@ -219,10 +270,10 @@ mod tests {
             },
         ];
         let non_empty_expected = " - second\n - first\n".to_string();
-        assert_eq!(change_gen.compact_changelog(non_empty), non_empty_expected);
+        assert_eq!(change_gen.compact_changelog(&non_empty), non_empty_expected);
 
         let empty: Vec<Commit> = vec![];
         let empty_expected = "No commits since last version".to_string();
-        assert_eq!(change_gen.compact_changelog(empty), empty_expected);
+        assert_eq!(change_gen.compact_changelog(&empty), empty_expected);
     }
 }

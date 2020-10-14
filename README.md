@@ -10,14 +10,26 @@ Supports TOML and JSON version files.
 
 ## Usage
 
+**Requires a GitHub [personal access token](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)**
+
 ```sh
-git-releaser -t [patch|minor|major] -f [package.json|Cargo.toml] --main-branch main [--log-level debug]
+git-releaser \
+  -r <org>/<repo> \
+  -t [patch|minor|major] \
+  -f [package.json|Cargo.toml] \
+  -p $GITHUB_TOKEN \
+  -b main
 ```
 
 Example
 
 ```sh
-git-releaser -t minor -f package.json -b main
+git-releaser \
+  -r egilsster/node-api \
+  -t minor \
+  -f package.json \
+  -p $GITHUB_TOKEN \
+  -b main
 ```
 
 See `git-releaser --help` for more information on usage.
@@ -25,11 +37,12 @@ See `git-releaser --help` for more information on usage.
 ### Example
 
 ```txt
-λ git-releaser minor Cargo.toml
+λ git-releaser -r egilsster/test -t minor -f package.json -b main -p $GITHUB_TOKEN
 📝 Current version is v0.8.1-0
 Do you want to release v0.9.0? yes
 📎 Generating a changelog for v0.9.0
 📡 Pushing updates
+🧾 Creating a GitHub release
 📖 Here are the changes for v0.9.0:
  - feat: added a new feature
  - fix: fixed pesky bugs
