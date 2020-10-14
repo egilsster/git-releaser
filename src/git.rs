@@ -121,6 +121,12 @@ pub fn push_tag(tag_ver: &str) -> Result<Output> {
     git(&tag_args)
 }
 
+/// Returns the corresponding commit for a tag
+pub fn get_commit_for_tag(tag_ver: &str) -> Result<String> {
+    let args = vec!["rev-list", "-n 1", tag_ver];
+    git(&args).map(|o| read_lines(&o))
+}
+
 /// Run a git command with arguments.
 fn git(args: &[&str]) -> Result<Output> {
     debug!("git {}", args.join(" "));
@@ -184,5 +190,14 @@ mod tests {
 
         let files: Vec<String> = vec!["README.md".to_owned()];
         assert!(add_files(files).is_ok());
+    }
+
+    #[test]
+    #[ignore = "No tags yet / no mocking yet"]
+    fn test_get_commit_for_tag() {
+        let tag = "0.1.0";
+        let res = get_commit_for_tag(tag).unwrap();
+
+        assert_eq!(res, "139810fdw80".to_string());
     }
 }

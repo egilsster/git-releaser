@@ -8,11 +8,13 @@ extern crate semver;
 mod changelog_gen;
 mod commit;
 mod git;
+mod github;
 mod update_version;
 mod version_file;
 
 use crate::changelog_gen::ChangelogGenerator;
 use crate::git::in_git_repository;
+use crate::github::GithubClient;
 use crate::update_version::{map_version_type, update_version, VersionType};
 use crate::version_file::VersionFile;
 use dialoguer::Confirm;
@@ -22,16 +24,21 @@ use std::io::Write;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
-#[structopt(about = "\ngit-releaser -t [major|minor|patch] -f package.json -b main")]
+#[structopt(
+    about = "\ngit-releaser -r egilsster/test -t [major|minor|patch] -f package.json -b main -p $GITHUB_TOKEN"
+)]
 struct CliArgs {
-    #[structopt(short, long, default_value = "info")]
-    log_level: String,
+    #[structopt(short = "r", long = "repo")]
+    repo: String,
 
     #[structopt(short = "t", long = "type")]
     version_type: String,
 
     #[structopt(short = "f", long = "file")]
     version_file: String,
+
+    #[structopt(short = "p", long = "personal-token")]
+    personal_token: String,
 
     #[structopt(short = "b", long)]
     main_branch: String,
@@ -43,17 +50,20 @@ struct CliArgs {
 async fn main() -> Result<()> {
     let args = CliArgs::from_args();
     let CliArgs {
-        log_level,
+        repo,
         version_type,
         version_file,
+        personal_token,
         main_branch,
     } = args;
-    let log_env = Env::default().filter(log_level);
+    let log_env = Env::default().default_filter_or("info");
     env_logger::from_env(log_env)
         .format(|buf, record| writeln!(buf, "{}", record.args()))
         .init();
 
     in_git_repository()?;
+
+    let gh_client = GithubClient::new(personal_token)?;
 
     let version_type = map_version_type(&version_type)?;
     let change_gen = ChangelogGenerator::new();
@@ -101,10 +111,21 @@ async fn main() -> Result<()> {
     git::push(&main_branch)?;
     git::push_tag(new_git_tag)?;
 
+    info!("🧾 Creating a GitHub release");
+    let tag_commit = git::get_commit_for_tag(new_git_tag)?;
+    gh_client
+        .create_new_release(
+            &repo,
+            new_git_tag,
+            &tag_commit,
+            &change_gen.markdown_changelog(&changelog, None),
+        )
+        .await?;
+
     info!(
         "📖 Here are the changes for v{}:\n{}",
         new_ver,
-        change_gen.compact_changelog(changelog)
+        change_gen.compact_changelog(&changelog)
     );
 
     info!("🚀 v{} has shipped!", new_ver);
