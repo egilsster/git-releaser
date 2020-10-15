@@ -5,21 +5,27 @@ const AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION
 
 pub struct GithubClient {
     client: Github,
+    owner: String,
+    repo: String,
 }
 
 impl GithubClient {
-    pub fn new<T>(pat: T) -> Result<Self>
+    pub fn new<T>(project: T, pat: T) -> Result<Self>
     where
         T: ToString,
     {
         let client = Github::new(AGENT, Credentials::Token(pat.to_string()))?;
+        let (owner, repo) = parse_project_string(project);
 
-        Ok(Self { client })
+        Ok(Self {
+            client,
+            owner,
+            repo,
+        })
     }
 
     pub async fn create_new_release<T>(
         &self,
-        project: T,
         tag: T,
         tagged_commitish: T,
         changelog: T,
@@ -36,10 +42,9 @@ impl GithubClient {
             draft: Some(false),
             prerelease: Some(false),
         };
-        let (owner, repo) = parse_project_string(project);
 
         client
-            .repo(owner, repo)
+            .repo(&self.owner, &self.repo)
             .releases()
             .create(&release_opts)
             .await?;
