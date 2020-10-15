@@ -63,7 +63,7 @@ async fn main() -> Result<()> {
 
     in_git_repository()?;
 
-    let gh_client = GithubClient::new(personal_token)?;
+    let gh_client = GithubClient::new(&repo, &personal_token)?;
 
     let version_type = map_version_type(&version_type)?;
     let change_gen = ChangelogGenerator::new();
@@ -115,7 +115,6 @@ async fn main() -> Result<()> {
     let tag_commit = git::get_commit_for_tag(new_git_tag)?;
     gh_client
         .create_new_release(
-            &repo,
             new_git_tag,
             &tag_commit,
             &change_gen.markdown_changelog(&changelog, None),
