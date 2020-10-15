@@ -226,15 +226,14 @@ mod tests {
                 committer: user.to_owned(),
             },
         ];
-        let non_empty_expected = "## v1.2.3 (2020-10-14)\n\n- second\n- first\n".to_string();
-        assert_eq!(
-            change_gen.markdown_changelog(&non_empty, Some(ver)),
-            non_empty_expected
-        );
+
+        let res1 = change_gen.markdown_changelog(&non_empty, Some(ver));
+        assert!(res1.contains("## v1.2.3"));
+        assert!(res1.contains("\n\n- second\n- first\n"));
 
         let empty: Vec<Commit> = vec![];
-        let empty_expected = "## 2020-10-14\n\nNo commits since last version\n".to_string();
-        assert_eq!(change_gen.markdown_changelog(&empty, None), empty_expected);
+        let res2 = change_gen.markdown_changelog(&empty, None);
+        assert!(res2.ends_with("No commits since last version\n"));
     }
 
     #[test]
