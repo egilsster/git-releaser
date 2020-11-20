@@ -16,6 +16,6 @@ chrono = "0.4.19"
 tokio = { version = "0.2.23", features = ["rt-threaded", "macros"] }
 eyre = "0.6.3"
 log = "0.4.11"
-env_logger = "0.8.1"
+env_logger = "0.8.2"
 dialoguer = "0.7.1"
 hubcaps = "0.6.2"
