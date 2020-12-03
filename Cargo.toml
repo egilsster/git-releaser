@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.59", features = ["preserve_order"] }
+serde_json = { version = "1.0.60", features = ["preserve_order"] }
 toml = { version = "0.5.7", features = ["preserve_order"] }
 semver = "0.11.0"
 structopt = { version = "0.3", default-features = false }
