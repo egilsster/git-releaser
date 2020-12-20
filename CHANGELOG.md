@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.2.0 (2020-12-20)
+
+- refactor(cli): switch to clap v3 beta (#44)
+- chore: fix install example
+
 ## v0.1.0 (2020-12-20)
 
 - chore: add install info
