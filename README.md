@@ -33,9 +33,9 @@ git-releaser 0.1.0
 ```sh
 git-releaser \
   -r <org>/<repo> \
-  -t [patch|minor|major] \
+  -v [patch|minor|major] \
   -f [package.json|Cargo.toml] \
-  -p $GITHUB_TOKEN \
+  -t $GITHUB_TOKEN \
   -b main
 ```
 
@@ -44,9 +44,9 @@ Example
 ```sh
 git-releaser \
   -r egilsster/node-api \
-  -t minor \
+  -v minor \
   -f package.json \
-  -p $GITHUB_TOKEN \
+  -t $GITHUB_TOKEN \
   -b main
 ```
 
@@ -55,7 +55,7 @@ See `git-releaser --help` for more information on usage.
 ### Example
 
 ```txt
-λ git-releaser -r egilsster/test -t minor -f package.json -b main -p $GITHUB_TOKEN
+λ git-releaser -r egilsster/test -v minor -f package.json -b main -t $GITHUB_TOKEN
 📝 Current version is v0.8.1-0
 Do you want to release v0.9.0? yes
 📎 Generating a changelog for v0.9.0
