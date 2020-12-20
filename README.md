@@ -8,6 +8,24 @@ A CLI tool to that creates a git tag, a changelog and a git release, all in one 
 
 Supports TOML and JSON version files.
 
+## Installing
+
+Homebrew
+
+```sh
+brew tap egilsster/git-releaser
+brew install git-releaser
+```
+
+`wget`
+
+```sh
+λ TAG=v0.1.0 && wget https://github.com/egilsster/git-releaser/releases/download/$TAG/git-releaser-x86_64-apple-darwin.tar.gz
+λ tar xf git-releaser-x86_64-apple-darwin.tar.gz -C /usr/local/bin
+λ releaser --version
+git-releaser 0.1.0
+```
+
 ## Usage
 
 **Requires a GitHub [personal access token](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token)**
