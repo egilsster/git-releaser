@@ -6,6 +6,7 @@ extern crate log;
 extern crate semver;
 
 mod changelog_gen;
+mod cli;
 mod commit;
 mod git;
 mod github;
@@ -17,47 +18,27 @@ use crate::git::in_git_repository;
 use crate::github::GithubClient;
 use crate::update_version::{map_version_type, update_version, VersionType};
 use crate::version_file::VersionFile;
+use clap::Clap;
+use cli::CliArgs;
 use dialoguer::Confirm;
 use env_logger::Env;
 use eyre::Result;
 use std::io::Write;
-use structopt::StructOpt;
-
-#[derive(StructOpt, Debug)]
-#[structopt(
-    about = "\ngit-releaser -r egilsster/test -t [major|minor|patch] -f package.json -b main -p $GITHUB_TOKEN"
-)]
-struct CliArgs {
-    #[structopt(short = "r", long = "repo")]
-    repo: String,
-
-    #[structopt(short = "t", long = "type")]
-    version_type: String,
-
-    #[structopt(short = "f", long = "file")]
-    version_file: String,
-
-    #[structopt(short = "p", long = "personal-token")]
-    personal_token: String,
-
-    #[structopt(short = "b", long)]
-    main_branch: String,
-}
 
 // REF https://github.com/github-changelog-generator/github-changelog-generator
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = CliArgs::from_args();
     let CliArgs {
-        repo,
         version_type,
         version_file,
-        personal_token,
+        repo,
         main_branch,
-    } = args;
+        personal_token,
+    } = cli::CliArgs::parse();
+
     let log_env = Env::default().default_filter_or("info");
-    env_logger::from_env(log_env)
+    env_logger::Builder::from_env(log_env)
         .format(|buf, record| writeln!(buf, "{}", record.args()))
         .init();
 
