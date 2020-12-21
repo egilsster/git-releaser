@@ -23,7 +23,7 @@ version = "1.0.60"
 features = ["preserve_order"]
 
 [dependencies.toml]
-version = "0.5.7"
+version = "0.5.8"
 features = ["preserve_order"]
 
 [dependencies.tokio]
