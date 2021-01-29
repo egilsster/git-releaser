@@ -27,5 +27,5 @@ version = "0.5.8"
 features = ["preserve_order"]
 
 [dependencies.tokio]
-version = "0.2.24"
+version = "0.2.25"
 features = ["rt-threaded", "macros"]
