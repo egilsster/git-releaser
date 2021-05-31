@@ -1,5 +1,5 @@
 use eyre::Result;
-use semver::Version;
+use semver::{Prerelease, Version};
 
 #[derive(PartialEq, Debug)]
 pub enum VersionType {
@@ -41,27 +41,27 @@ pub fn update_version(mut version: Version, version_type: VersionType) -> Result
         VersionType::Prerelease => {
             debug!("Prerelease");
             version.patch += 1;
-            version.pre = vec![semver::Identifier::Numeric(0)];
+            version.pre = Prerelease::new("0").unwrap();
         }
         VersionType::Patch => {
             debug!("Patch");
-            if !version.is_prerelease() {
+            if version.pre.is_empty() {
                 version.patch += 1;
             }
-            version.pre = vec![];
+            version.pre = Prerelease::EMPTY;
         }
         VersionType::Minor => {
             debug!("Minor");
             version.minor += 1;
             version.patch = 0;
-            version.pre = vec![];
+            version.pre = Prerelease::EMPTY;
         }
         VersionType::Major => {
             debug!("Major");
             version.major += 1;
             version.minor = 0;
             version.patch = 0;
-            version.pre = vec![];
+            version.pre = Prerelease::EMPTY;
         }
     }
     Ok(version)
