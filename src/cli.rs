@@ -1,9 +1,9 @@
-use clap::Clap;
+use clap::Parser;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Example: git-releaser -r egilsster/test -v [major|minor|patch] -f package.json -t $GITHUB_TOKEN
-#[derive(Clap)]
+#[derive(Parser, Debug)]
 #[clap(version = VERSION)]
 pub struct CliArgs {
     /// The Github project to create a release of
