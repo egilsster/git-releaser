@@ -18,7 +18,7 @@ use crate::git::in_git_repository;
 use crate::github::GithubClient;
 use crate::update_version::{map_version_type, update_version, VersionType};
 use crate::version_file::VersionFile;
-use clap::Clap;
+use clap::Parser;
 use cli::CliArgs;
 use dialoguer::Confirm;
 use env_logger::Env;
