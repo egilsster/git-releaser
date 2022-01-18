@@ -5,7 +5,7 @@ authors = ["Egill Sveinbjörnsson <egillsveinbjorns@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-clap = { version = "3.0.7", features = ["derive"] }
+clap = { version = "3.0.9", features = ["derive"] }
 semver = "1.0.4"
 chrono = "0.4.19"
 eyre = "0.6.5"
