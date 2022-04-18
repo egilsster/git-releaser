@@ -2,6 +2,7 @@ use eyre::{Result, WrapErr};
 use semver::Version;
 use std::fs;
 use std::process::Command;
+use toml_edit::{value, Document};
 
 #[derive(Debug, PartialEq)]
 pub enum VersionFiletype {
@@ -62,11 +63,10 @@ impl VersionFile {
 
         match self.version_filetype {
             VersionFiletype::TOML => {
-                let mut v: toml::Value = toml::from_str(&ver_file)?;
-                v["package"]["version"] = toml::Value::String(new_ver.to_string());
+                let mut doc = ver_file.parse::<Document>().expect("invalid doc");
+                doc["package"]["version"] = value(new_ver.to_string());
 
-                let version_file_contents = toml::to_string(&v)?;
-                fs::write(&self.filename, version_file_contents)?;
+                fs::write(&self.filename, doc.to_string())?;
                 sync_cargo_lockfile()?;
             }
             VersionFiletype::JSON => {
@@ -100,16 +100,16 @@ pub fn read_version_file(version_filetype: &VersionFiletype, file_path: &str) ->
     match version_filetype {
         VersionFiletype::TOML => {
             let ver_file = fs::read_to_string(file_path)?;
-            let v: toml::Value = toml::from_str(&ver_file)?;
-            let package_info = v.get("package");
+            let doc = ver_file.parse::<Document>().expect("invalid doc");
 
-            if package_info.is_none() {
-                return Err(eyre!("No version property found in TOML file"));
-            }
+            let package_info = doc.get("package");
 
-            match package_info.unwrap().get("version") {
-                Some(ver) => ver.as_str().unwrap().to_version(),
-                None => Err(eyre!("Version property is not valid")),
+            match package_info {
+                Some(package_info) => match package_info.get("version") {
+                    Some(ver) => ver.as_str().unwrap().to_version(),
+                    None => Err(eyre!("Version property is not valid")),
+                },
+                None => Err(eyre!("No package property found in TOML file")),
             }
         }
         VersionFiletype::JSON => {
@@ -177,7 +177,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Syncing the cargo lock isn't working on ci"]
     fn test_update_version_file_cargo_toml() {
         let test_file = "Cargo_test.toml";
         let contents = r#"[package]
@@ -185,6 +184,11 @@ name = "git-releaser"
 version = "0.1.0"
 authors = ["Author <author@earth.com>"]
 edition = "2018"
+
+[dependencies]
+clap = { version = "3.1.9", features = ["derive"] }
+semver = "1.0.7"
+serde = { version = "1.0.136", features = ["derive"] }
 "#
         .to_owned();
 
@@ -206,6 +210,11 @@ name = "git-releaser"
 version = "1.0.0"
 authors = ["Author <author@earth.com>"]
 edition = "2018"
+
+[dependencies]
+clap = { version = "3.1.9", features = ["derive"] }
+semver = "1.0.7"
+serde = { version = "1.0.136", features = ["derive"] }
 "#
         );
     }

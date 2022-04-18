@@ -4,6 +4,7 @@ extern crate eyre;
 extern crate log;
 
 extern crate semver;
+extern crate toml_edit;
 
 mod changelog_gen;
 mod cli;
