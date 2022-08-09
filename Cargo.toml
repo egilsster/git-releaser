@@ -13,7 +13,7 @@ log = "0.4.17"
 env_logger = "0.9.0"
 dialoguer = "0.10.2"
 hubcaps = "0.6.2"
-serde = { version = "1.0.136", features = ["derive"] }
+serde = { version = "1.0.143", features = ["derive"] }
 serde_json = { version = "1.0.83", features = ["preserve_order"] }
 toml_edit = "0.14.4"
 tokio = { version = "1.19.2", features = ["full"] }
