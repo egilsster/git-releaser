@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 clap = { version = "3.2.21", features = ["derive"] }
-semver = "1.0.13"
+semver = "1.0.14"
 chrono = "0.4.22"
 eyre = "0.6.8"
 log = "0.4.17"
