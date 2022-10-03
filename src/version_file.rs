@@ -186,7 +186,7 @@ authors = ["Author <author@earth.com>"]
 edition = "2018"
 
 [dependencies]
-clap = { version = "3.1.9", features = ["derive"] }
+clap = { version = "4.0.0", features = ["derive"] }
 semver = "1.0.7"
 serde = { version = "1.0.136", features = ["derive"] }
 "#
@@ -212,7 +212,7 @@ authors = ["Author <author@earth.com>"]
 edition = "2018"
 
 [dependencies]
-clap = { version = "3.1.9", features = ["derive"] }
+clap = { version = "4.0.0", features = ["derive"] }
 semver = "1.0.7"
 serde = { version = "1.0.136", features = ["derive"] }
 "#
